@@ -35,10 +35,10 @@ print("Dimensiones dataset: ",df.shape)
 
 """  Elimina valores duplicados """
 df=df.drop_duplicates()
-print("Dimensiones dataset: ",df.shape)
+#print("Dimensiones dataset: ",df.shape)
 
 
-""" se validan datos nulos y con la media se rellenan parsa no alterar tanto la data """
+""" se validan datos nulos y con la media se rellenan para no alterar tanto la data """
 num_cols=df.select_dtypes(include=["int64","float64"]).columns
 df_clean=df.copy()
 for col in num_cols:
@@ -68,17 +68,51 @@ print(df_clean.head())
 # Dataset sin outliers
 df_clean_olr=df_clean.copy()
 
-for col in num_cols:
+""" for col in num_cols:
     lower=q1[col]-1.5*irq[col] # Calcula el menor rango
     upper=q3[col]+1.5*irq[col] # Calcula el mayor rango
-    df_clean_olr=df_clean_olr[(df_clean_olr[col]>=lower)&(df_clean_olr[col]<=upper)]
+    df_clean_olr=df_clean_olr[(df_clean_olr[col]>=lower)&(df_clean_olr[col]<=upper)] """
+
 print("Outlier del datsel limpio: ",df_clean_olr.shape)
 
 #obtener data de x columna y mostrar los elementos sin repetirlos
-print(df_clean_olr["EnerSource"].unique())
+#print(df_clean_olr["EnerSource"].unique())
 
 # Sumar Bagazo y Biomasa
-df=df_clean_olr.copy()
-df.loc[df["EnerSource"]=="BAGAZO","VALOR"]+=df.loc[df["EnerSource"]=="BIOMASA","VALOR"].sum()
+#df=df_clean_olr.copy()
+df_clean_olr.loc[df["EnerSource"]=="BAGAZO","VALOR"]+=df_clean_olr.loc[df["EnerSource"]=="BIOMASA","VALOR"].sum()
+
+# Sumar "JET-A1" y "GLP" en "COMBUSTOLEO"
+
+df_clean_olr.loc[df["EnerSource"]=="COMBUSTOLEO","VALOR"]+=df_clean_olr.loc[df["EnerSource"].isin(["JET-A1","GLP"]),"VALOR"].sum()
+
+# Eliminar "BIOMASA" , "JET-A1" y "GLP"
+#dfuentes=df_clean_olr.copy()
+dfuentes=df_clean_olr[~df_clean_olr["EnerSource"].isin(["BIOMASA","JET-A1","GLP"])]
+
+#comprobacion de columnas eliminadas
+#print(dfuentes["EnerSource"].unique())
+
+print(dfuentes.EnerSource.value_counts())
+dfuentes.EnerSource.value_counts()
+
+#print(dfuentes["EnerSource"].unique())
+
+
+"""                 Gráfico de Torta             """
+
+fig, ax=plt.subplots(figsize=(12,14))
+dfuentes.EnerSource.value_counts().plot(
+    kind="pie",
+    #labels=["Agua","Rad Solar","Gas","Carbon","Bagazo","Combustoleo","ACPM","Biogas"],
+    ax=ax,
+    wedgeprops={"edgecolor":"black","linewidth":0.5}
+)
+
+plt.ylabel("")
+plt.legend(loc="upper right")
+plt.title("Tipos de energía generada",fontsize=20)
+
+plt.show()
 
 
